@@ -4,21 +4,52 @@ import os
 class ServerException(Exception):
     pass
 
+class case_no_file(object):
+    def test(self, handler):
+        return not os.path.exists(handler.full_path)
+    def act(self, handler):
+        raise ServerException("'{0}' not found".format(self.path))
+
+class case_existing_file(object):
+    def test(self, handler):
+        return os.path.isfile(handler.full_path)
+    def act(self, handler):
+        handler.handle_file(handler.full_fath)
+
+class case_always_fail(object):
+    def test(self,handler):
+        return True
+    def act(self, handler):
+        raise ServerException("Unknown object '{0}'".format(self.path))
+
+class case_directory_index_file(object):
+
+    def index_path(self, handler):
+        return os.path.join(handler.full_path, 'index.html')
+    def test(self, handler):
+        return os.path.isdir(handler.full_path) and \
+            os.path.isfile(self.index_path(handler))
+    def act(self, handler):
+        handler.handle_file(self.index_path(handler))
+
 
 class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
-    '''Handle HTTP requests by returning a fixed 'page'.'''
-
-    # Handle get request
+   
+    Cases = [case_no_file(), 
+        case_existing_file(),
+        case_directory_index_file(),
+        case_always_fail()]
+    
+    full_path = ""
+    
     def do_GET(self):
         try:
-            full_path = os.getcwd() + self.path
-            
-            if not os.path.exists(full_path):
-                raise ServerException("'{0}' not found".format(self.path))
-            elif os.path.isfile(full_path):
-                self.handle_file(full_path)
-            else:
-                raise ServerException("Unknown object '{0}'".format(self.path))
+            self.full_path = os.getcwd() + self.path
+    
+            for handler in self.Cases:
+                if handler.test(self):
+                    handler.act(self)
+                    break
         except Exception as msg:
             self.handle_error(msg)
 
@@ -45,15 +76,12 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         self.send_content(content, 404)
 
     def send_content(self, content, status=200):
-        body = content.encode('utf-8')
         self.send_response(status)
         self.send_header("content-type", "text/html")
-        self.send_header("content-length", str(len(body)))
+        self.send_header("content-length", str(len(content)))
         self.end_headers()
-        self.wfile.write(body)
+        self.wfile.write(content)
     
-
-
 if __name__ == '__main__':
     serverAddress = ('', 8080)
     server = BaseHTTPServer.HTTPServer(serverAddress, RequestHandler)
