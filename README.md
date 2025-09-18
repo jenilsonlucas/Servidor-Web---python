@@ -25,3 +25,6 @@ Atualmente, o servidor oferece suporte ao método GET, com as seguintes funciona
 3. Análise de desempenho para comparar os modelos e entender trade-offs de escalabilidade e consumo de recursos.
 
 Este projeto reflete não apenas habilidades práticas em Python e redes, mas também uma abordagem de engenharia exploratória, focada em compreender como servidores web são projetados e otimizados para atender diferentes cenários de carga.
+
+## JENILSON DOMINGOS DA COSTA LUCAS
+## EMAIL: jenilsonllucas@gmail.com
