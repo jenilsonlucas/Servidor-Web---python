@@ -41,9 +41,17 @@ class case_directory_no_index_file(object):
     def act(self, handler):
         handler.list_dir(handler.full_path)
 
+class case_cgi_file(object):
+    def test(self,handler):
+        return os.path.isfile(handler.full_path) and \
+            handler.full_path.endswith('.py')
+    def act(self, handler):
+        handler.run_cgi(handler.full_path)
+
 class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
    
     Cases = [case_no_file(), 
+        case_cgi_file(),
         case_existing_file(),
         case_directory_index_file(),
         case_directory_no_index_file(),
@@ -112,6 +120,14 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         except OSError as msg:
             msg = "'{0}' cannot be listed: {1}".format(self.path, msg)
             self.handle_error(msg)
+    
+    def run_cgi(self, full_path):
+        import subprocess
+        cmd = ["python3", full_path]
+        result = subprocess.Popen(cmd, stdout=subprocess.PIPE, text=True)
+        data, _ = result.communicate()
+        self.send_content(data)    
+
 if __name__ == '__main__':
     serverAddress = ('', 8080)
     server = BaseHTTPServer.HTTPServer(serverAddress, RequestHandler)
